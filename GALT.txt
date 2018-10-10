@@ -52,10 +52,53 @@ macro "GALT [a]" {
 	// find sets of peaks function
 	// needs array of values from profile, stdDev background, mean background value, expected number of peaks per set, expected number of sets?
 	function findPeakSets(vals, stDevBG, meanBG, expectedPeaks) {
+		res = newArray;
 		var tol = 3*stdDevBG;
 		maxima = Array.findMaxima(vals, tol);
 		Array.sort(maxima);
 		
+		for (i=0; i<maxima.length-expectedPeaks+1; i++) {
+			set = Array.slice(maxima, i, i+expectedPeaks);
+			if ( amplitudeCheck(vals, set, 3*meanBG) ) {
+				lastStdDev = findStdDevFromIndices(vals, set);
+				for (j=i+1; j<maxima.length-expectedPeaks+1; j++) {
+					testSet = Array.slice(maxima, j, j+expectedPeaks);
+					thisStdDev = findStdDevFromIndices(vals, testSet);
+					if (thisStdDev < lastStdDev) {
+						lastStdDev = thisStdDev;
+						set = testSet;
+					} else {
+						for (k=0; k<set.length; k++) {
+							res = append(res, set[k]);
+						}
+						i = j+expectedPeaks-2;
+						break;
+					}
+				}
+			}			
+		}
+		return res;
+	}
+
+	// amplitude check helper function for find peak sets function
+	function amplitudeCheck(vals, indices, threshold) {
+		res = true;
+		for (i=0; i<indices.length; i++) {
+			if ( vals[indices[i]] < threshold ) {
+				res = false;
+			}
+		}
+		return res;
+	}
+
+	// find standard dev from indices helper function for find peak sets function
+	function findStdDevFromIndices(vals, indices) {
+		setValues = newArray;
+		for (i=0; i<indices.length; i++) {
+			setValues = append(setValues, vals[indices[i]]);
+		}
+		Array.getStatistics(setValues, min, max, mean, stdDev);
+		return stdDev;
 	}
 
 	// get directory from user
@@ -105,7 +148,8 @@ macro "GALT [a]" {
 			Table.set("Mean Background", i, meanBG);
 			Table.set("Background Standard Deviation", i, stdDevBG);
 
-			findPeakSets(vals, stdDevBG, meanBG, 5);
+			sets = findPeakSets(vals, stdDevBG, meanBG, 5);
+			Array.print(sets);
 
 			// let user look before closing
 			Dialog.show();
