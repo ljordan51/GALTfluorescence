@@ -1,10 +1,6 @@
 macro "GALT [a]" {
 
-	var dir = getString("This macro takes a file path which is the target directory. It loops through the files in this target directory to perform analysis. Please enter the target directory file path.", "C:/Gener8/GLT/GALT FL Images/16mm lens/vertical rows center");
-	if ( !endsWith(dir, "/") ) {
-		dir = dir + "/";
-	}
-
+	// append function
 	function append(arr, value) {
      		arr2 = newArray(arr.length+1);
      		for (i=0; i<arr.length; i++) {
@@ -14,8 +10,61 @@ macro "GALT [a]" {
      		return arr2;
  	}
 
+	// find line function
+	// needs start params and direction
+	function findLine(x0, y0, x1, y1) {
+
+		// starting guess parameters for line finding
+		var lineTop = y0;
+		var lineBottom = y1;
+		var lineLeft = x0;
+		var lineRight = x1;
+
+		var pixels = 20; // number of pixels between centers is about 14
+
+		// direction of movement should be perpendicular to line
+		if ( y0 == y1 ) {
+			xshift = 0;
+			yshift = 1;
+		} else {
+			xshift = 1;
+			yshift = 0;
+		}
+
+		// find nearby line with brighest pixel
+		var lastMax = 0;
+		for (j=0; j<pixels; j++) {
+			makeLine(lineLeft+j*xshift, lineBottom+j*yshift, lineRight+j*xshift, lineTop+j*yshift);
+			vals = getProfile();
+			Array.getStatistics(vals, min, max, mean, stdDev);
+			if (max < lastMax) {
+				makeLine(lineLeft+(j-1)*xshift, lineBottom+(j-1)*yshift, lineRight+(j-1)*xshift, lineTop+(j-1)*yshift);
+				vals = getProfile();
+				break;
+			} else {
+				lastMax = max;
+			}
+		}
+
+		return vals;
+	}
+
+	// get directory from user
+	var dir = getString("This macro takes a file path which is the target directory. It loops through the files in this target directory to perform analysis. Please enter the target directory file path.", "C:/Gener8/GLT/GALT FL Images/16mm lens/vertical rows center");
+	if ( !endsWith(dir, "/") ) {
+		dir = dir + "/";
+	}
+
+	// get images type from user
+	// switch case here to set params
+	// lines to draw (names of these lines)
+	// which direction they should go
+	// expected profile information
+
+	// create table to store data
 	Table.create("Fluorescence");
 
+	// check if the entered path is a directory before entering main loop
 	if (File.isDirectory(dir)) {
 
 		files = getFileList(dir); // get array of files
@@ -29,26 +78,9 @@ macro "GALT [a]" {
 			var pth = dir + filename;
 			open(pth);
 
-			// starting guess parameters for line finding
-			var lineTop = 700;
-			var lineBottom = 2300;
-			var lineColumn = 2487;
-			var pixels = 20; // number of pixels between centers is about 14
-
-			// find nearby line with brighest pixel
-			var lastMax = 0;
-			for (j=0; j<pixels; j++) {
-				makeLine(lineColumn+j, lineBottom, lineColumn+j, lineTop);
-				vals = getProfile();
-				Array.getStatistics(vals, min, max, mean, stdDev);
-				if (max < lastMax) {
-					makeLine(lineColumn+j-1, lineBottom, lineColumn+j-1, lineTop);
-					vals = getProfile();
-					break;
-				} else {
-					lastMax = max;
-				}
-			}
+			// find line and get statistics
+			vals = findLine(2487, 700, 2487, 2300);
+			Array.getStatistics(vals, min, max, mean, stdDev);
 
 			// show line profile
 			Plot.create("Profile " + filename, "Row", "Intensity", vals);
