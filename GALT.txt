@@ -60,10 +60,12 @@ macro "GALT [a]" {
 		for (i=0; i<maxima.length-expectedPeaks+1; i++) {
 			set = Array.slice(maxima, i, i+expectedPeaks);
 			if ( amplitudeCheck(vals, set, 3*meanBG) ) {
-				lastStdDev = findStdDevFromIndices(vals, set);
+				lastStats = getStatsFromIndices(vals, set);
+				lastStdDev = lastStats[3];
 				for (j=i+1; j<maxima.length-expectedPeaks+1; j++) {
 					testSet = Array.slice(maxima, j, j+expectedPeaks);
-					thisStdDev = findStdDevFromIndices(vals, testSet);
+					thisStats = getStatsFromIndices(vals, testSet);
+					thisStdDev = thisStats[3];
 					if (thisStdDev < lastStdDev) {
 						lastStdDev = thisStdDev;
 						set = testSet;
@@ -91,14 +93,15 @@ macro "GALT [a]" {
 		return res;
 	}
 
-	// find standard dev from indices helper function for find peak sets function
-	function findStdDevFromIndices(vals, indices) {
+	// get stats from indices helper function, used in several places
+	function getStatsFromIndices(vals, indices) {
 		setValues = newArray;
 		for (i=0; i<indices.length; i++) {
 			setValues = append(setValues, vals[indices[i]]);
 		}
 		Array.getStatistics(setValues, min, max, mean, stdDev);
-		return stdDev;
+		res = newArray(min, max, mean, stdDev);
+		return res;
 	}
 
 	// get directory from user
@@ -112,6 +115,8 @@ macro "GALT [a]" {
 	// lines to draw (names of these lines)
 	// which direction they should go
 	// expected profile information
+	// expected peaks
+	var expectedPeaks = 5;
 
 	// create table to store data
 	Table.create("Fluorescence");
@@ -133,6 +138,8 @@ macro "GALT [a]" {
 			var pth = dir + filename;
 			open(pth);
 
+			// need to add loop on the rest of this stuff for line making
+
 			// find line and get statistics
 			vals = findLine(2487, 700, 2487, 2300);
 			Array.getStatistics(vals, min, max, mean, stdDev);
@@ -141,15 +148,24 @@ macro "GALT [a]" {
 			Plot.create("Profile " + filename, "Row", "Intensity", vals);
 			Plot.show();
 
-			// characterize noise
+			// characterize background and noise
 			var length = vals.length;
-			background = Array.slice(vals, length-300, length);
+			background = Array.slice(vals, length-300, length); // probably want this to be different depending on which image we are looking at
 			Array.getStatistics(background, minBG, maxBG, meanBG, stdDevBG);
 			Table.set("Mean Background", i, meanBG);
 			Table.set("Background Standard Deviation", i, stdDevBG);
 
-			sets = findPeakSets(vals, stdDevBG, meanBG, 5);
+			// find peak sets
+			sets = findPeakSets(vals, stdDevBG, meanBG, expectedPeaks);
 			Array.print(sets);
+
+			// characterize sets
+			for (j=0; j<sets.length; j+=expectedPeaks) {
+				indices = Array.slice(sets, j, j+expectedPeaks);
+				Array.print(indices);
+				setStats = getStatsFromIndices(vals, indices);
+				Array.print(setStats);
+			}
 
 			// let user look before closing
 			Dialog.show();
