@@ -49,6 +49,15 @@ macro "GALT [a]" {
 		return vals;
 	}
 
+	// find sets of peaks function
+	// needs array of values from profile, stdDev background, mean background value, expected number of peaks per set, expected number of sets?
+	function findPeakSets(vals, stDevBG, meanBG, expectedPeaks) {
+		var tol = 3*stdDevBG;
+		maxima = Array.findMaxima(vals, tol);
+		Array.sort(maxima);
+		
+	}
+
 	// get directory from user
 	var dir = getString("This macro takes a file path which is the target directory. It loops through the files in this target directory to perform analysis. Please enter the target directory file path.", "C:/Gener8/GLT/GALT FL Images/16mm lens/vertical rows center");
 	if ( !endsWith(dir, "/") ) {
@@ -63,6 +72,9 @@ macro "GALT [a]" {
 
 	// create table to store data
 	Table.create("Fluorescence");
+
+	// create dialog to pause when needed
+	Dialog.create("Continue?");
 
 	// check if the entered path is a directory before entering main loop
 	if (File.isDirectory(dir)) {
@@ -88,35 +100,15 @@ macro "GALT [a]" {
 
 			// characterize noise
 			var length = vals.length;
-			endNoise = Array.slice(vals, length-300, length);
-			Array.getStatistics(endNoise, minNoise, maxNoise, meanNoise, stdDevNoise);
-			Table.set("Mean Noise", i, meanNoise);
-			Table.set("Noise Standard Deviation", i, stdDevNoise);
+			background = Array.slice(vals, length-300, length);
+			Array.getStatistics(background, minBG, maxBG, meanBG, stdDevBG);
+			Table.set("Mean Background", i, meanBG);
+			Table.set("Background Standard Deviation", i, stdDevBG);
 
-			// find sets
-			var setLength = 100; // max number of vertical pixels a set takes up
-			var tol = mean + 3*stdDevNoise;
-			// var tol = maxNoise*2;
-			Table.set("Max Noise", i, maxNoise);
-			maxima = Array.findMaxima(vals, tol);
-			//Array.sort(maxima);
-			//Array.print(maxima);
-			var expectedPeaks = 5; // expected number of wells per set
-			res = newArray;
-			for (k=0; k<maxima.length-expectedPeaks+1; k++) {
-				set = Array.slice(maxima, k, k+expectedPeaks);
-				Array.getStatistics(set, minSet, maxSet, meanSet, stdDevSet);
-				if ( (maxSet - minSet) <= setLength ) {
-					res = append(res, vals[set[4]]);
-					k = k + expectedPeaks-1;
-				}
-			}
-			for (m=0; m<res.length; m++) {
-				Table.set("Set " + m, i, res[m]);
-			}
+			findPeakSets(vals, stdDevBG, meanBG, 5);
 
 			// let user look before closing
-			waitForUser;
+			Dialog.show();
 			close(filename);
 		}
 		Table.update;
