@@ -253,7 +253,7 @@ macro "GALT [a]" {
 					var setMean = setStats[2];
 					var setStdDev = setStats[3];
 					if (j > peakNames.length-1) {
-						peakName = "Set " + j;
+						peakName = "Set " + j+1;
 					} else {
 						peakName = peakNames[j];
 					}
