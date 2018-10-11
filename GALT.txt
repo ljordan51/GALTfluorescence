@@ -57,7 +57,7 @@ macro "GALT [a]" {
 
 	// find sets of peaks function
 	// needs array of values from profile, stdDev background, mean background value, expected number of peaks per set, expected number of sets?
-	function findPeakSets(vals, stDevBG, meanBG, expectedSets, expectedPeaks, firstSetStart, firstSetEnd, pixBtwSets, maxIndexRange) {
+	function findPeakSets(vals, stDevBG, meanBG, expectedSets, expectedPeaks, firstSetStart, pixBtwSets, maxIndexRange) {
 		res = newArray;
 		var tol = 3*stdDevBG;
 		var threshold = meanBG+15*stdDevBG;
@@ -157,8 +157,7 @@ macro "GALT [a]" {
 			var expectedSets = 6; // expected number of sets of fluorescent wells
 			var expectedPeaks = 5; // expected number of wells in a row with same fluorescence concentration
 			var pixBtwSets = newArray(140, 140, 140, 140, 140); // minimum number of pixels expected to be seen between any two sets
-			var firstSetStart = 340; // first index to expect a well in the first set could be in
-			var firstSetEnd = 470; // last index to expect a well in the first set could be in
+			var firstSetStart = 200; // first index to expect a well in the first set could be in
 			var searchPixels = 20; // number of pixels to search through for line finding
 			var maxIndexRange = 84; // number of pixels that the set of peaks should range at maximum
 	} else if ( imageType == "9 sets of 3" ) {
@@ -177,8 +176,7 @@ macro "GALT [a]" {
 			var expectedSets = 3;
 			var expectedPeaks = 5;
 			var pixBtwSets = newArray(112, 112);
-			var firstSetStart = 200;
-			var firstSetEnd = 310;
+			var firstSetStart = 100;
 			var searchPixels = 300;
 			var maxIndexRange = 84;
 	} else if ( imageType == "9 sets of 1" ) {
@@ -198,7 +196,6 @@ macro "GALT [a]" {
 			var expectedPeaks = 3;
 			var pixBtwSets = newArray(0);
 			var firstSetStart = 100;
-			var firstSetEnd = 375;
 			var searchPixels = 300;
 			var maxIndexRange = 56;
 	} else {
@@ -210,8 +207,7 @@ macro "GALT [a]" {
 		var expectedSets = 6;
 		var expectedPeaks = 5;
 		var pixBtwSets = newArray(140, 140, 140, 140, 140);
-		var firstSetStart = 340;
-		var firstSetEnd = 470;
+		var firstSetStart = 200;
 		var searchPixels = 20;
 		var maxIndexRange = 84;
 	}
