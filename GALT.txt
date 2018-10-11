@@ -32,19 +32,25 @@ macro "GALT [a]" {
 		}
 
 		// find nearby line with brighest pixel
-		var lastMean = 0;
+		var bestCentered = 0;
+		var bestJ = 0;
 		for (j=0; j<pixels; j++) {
 			makeLine(lineLeft+j*xshift, lineBottom+j*yshift, lineRight+j*xshift, lineTop+j*yshift);
+			//waitForUser;
 			vals = getProfile();
 			Array.getStatistics(vals, min, max, mean, stdDev);
-			if (mean < lastMean) {
-				makeLine(lineLeft+(j-1)*xshift, lineBottom+(j-1)*yshift, lineRight+(j-1)*xshift, lineTop+(j-1)*yshift);
-				vals = getProfile();
-				break;
-			} else {
-				lastMean = mean;
+			howCentered = mean;
+			//print(howCentered);
+			if (howCentered > bestCentered) {
+				bestJ = j;
+				bestCentered = howCentered;
 			}
 		}
+
+		//print(bestJ);
+		makeLine(lineLeft+bestJ*xshift, lineBottom+bestJ*yshift, lineRight+bestJ*xshift, lineTop+bestJ*yshift);
+		waitForUser;
+		vals = getProfile();
 
 		return vals;
 	}
@@ -135,7 +141,7 @@ macro "GALT [a]" {
 	if ( imageType == "2 columns of 6") {
 			var numLines = 2; // integer value equal to the number of lines that will be drawn for profiles
 			lineNames = newArray("Assays", "Known Concentration"); // array of names for these lines for table creation
-			linePoints = newArray(2054, 700, 2054, 2300, 2487, 700, 2487, 2300); // array of sets of 4 points for drawing the lines
+			linePoints = newArray(1980, 700, 1980, 2300, 2400, 700, 2400, 2300); // array of sets of 4 points for drawing the lines
 			backgroundPoints = newArray(1300, 300); // array with sets of start points and lengths of areas to measure background information
 			peakNames = newArray("Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6"); // array with the names of each set in the line
 			var expectedPeaks = 5; // expected number of wells in a row with fluorescence
@@ -203,8 +209,8 @@ macro "GALT [a]" {
 				Array.getStatistics(vals, min, max, mean, stdDev);
 
 				// show line profile
-				Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
-				Plot.show();
+				// Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
+				// Plot.show();
 
 				// characterize background and noise
 				var length = vals.length;
@@ -232,9 +238,9 @@ macro "GALT [a]" {
 				}
 
 				// let user look before closing
-				//Dialog.create("Continue?");
-				//Dialog.show();
-				waitForUser;
+				Dialog.create("Continue?");
+				Dialog.show();
+				//waitForUser;
 				close(filename);
 			}
 
