@@ -125,19 +125,19 @@ macro "GALT [a]" {
 			backgroundPoints = newArray(1300, 300); // array with sets of start points and lengths of areas to measure background information
 			peakNames = newArray("Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6"); // array with the names of each set in the line
 			var expectedPeaks = 5; // expected number of wells in a row with fluorescence
-	} else if ( imageType == case "9 sets of 3" ) {
+	} else if ( imageType == "9 sets of 3" ) {
 			var numLines = 3;
 			lineNames = newArray("Left", "Center", "Right");
-			linePoints = newArray();
-			backgroundPoints = newArray();
-			peakNames = newArray("Bottom 1u"; "Bottom 5u", "Bottom 10u", "Middle 1u"; "Middle 5u", "Middle 10u", "Top 1u"; "Top 5u", "Top 10u");
+			linePoints = newArray(508, 500, 508, 2700, 2123, 500, 2123, 2700, 3820, 500, 3820, 2700);
+			backgroundPoints = newArray(1350, 200);
+			peakNames = newArray("Bottom 1u", "Bottom 5u", "Bottom 10u", "Middle 1u", "Middle 5u", "Middle 10u", "Top 1u", "Top 5u", "Top 10u");
 			var expectedPeaks = 5;
-	} else if ( imageType == case "9 sets of 1" ) {
+	} else if ( imageType == "9 sets of 1" ) {
 			var numLines = 3;
 			lineNames = newArray("Left", "Center", "Right");
 			linePoints = newArray();
 			backgroundPoints = newArray();
-			peakNames = newArray("Bottom 1u"; "Bottom 5u", "Bottom 10u", "Middle 1u"; "Middle 5u", "Middle 10u", "Top 1u"; "Top 5u", "Top 10u");
+			peakNames = newArray("Bottom 1u", "Bottom 5u", "Bottom 10u", "Middle 1u", "Middle 5u", "Middle 10u", "Top 1u", "Top 5u", "Top 10u");
 			var expectedPeaks = 3;
 	} else {
 			var numLines = 2;
@@ -190,7 +190,7 @@ macro "GALT [a]" {
 
 				// characterize background and noise
 				var length = vals.length;
-				background = Array.slice(vals, length-300, length); // probably want this to be different depending on which image we are looking at
+				background = Array.slice(vals, backgroundPoints[0], backgroundPoints[0]+backgroundPoints[1]); // probably want this to be different depending on which image we are looking at
 				Array.getStatistics(background, minBG, maxBG, meanBG, stdDevBG);
 				Table.set("Mean Background", entryLine, meanBG);
 				Table.set("Background Standard Deviation", entryLine, stdDevBG);
