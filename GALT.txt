@@ -20,7 +20,7 @@ macro "GALT [a]" {
 		var lineLeft = x0;
 		var lineRight = x1;
 
-		var pixels = 20; // number of pixels between centers is about 14
+		var pixels = 300; // number of pixels between centers is about 14
 
 		// direction of movement should be perpendicular to line
 		if ( y0 == y1 ) {
