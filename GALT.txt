@@ -56,7 +56,7 @@ macro "GALT [a]" {
 		var tol = 3*stdDevBG;
 		maxima = Array.findMaxima(vals, tol);
 		Array.sort(maxima);
-		
+
 		for (i=0; i<maxima.length-expectedPeaks+1; i++) {
 			set = Array.slice(maxima, i, i+expectedPeaks);
 			if ( amplitudeCheck(vals, set, 3*meanBG) ) {
@@ -77,7 +77,7 @@ macro "GALT [a]" {
 						break;
 					}
 				}
-			}			
+			}
 		}
 		return res;
 	}
@@ -116,7 +116,6 @@ macro "GALT [a]" {
 	Dialog.addRadioButtonGroup("Options", items, 3, 1, items[2]);
 	Dialog.show;
 	imageType = Dialog.getRadioButton();
-	print(imageType);
 
 	// set params based on user image type choice
 	if ( imageType == "2 columns of 6") {
@@ -156,7 +155,6 @@ macro "GALT [a]" {
 	if (File.isDirectory(dir)) {
 
 		files = getFileList(dir); // get array of files
-		Table.setColumn("File Name", files);
 
 		// loop through files
 		for (i=0; i<files.length; i++) {
@@ -164,47 +162,64 @@ macro "GALT [a]" {
 			// open file
 			var filename = files[i];
 			var pth = dir + filename;
-			open(pth);
+			var currIndex = indexOf(filename, "A")-1;
+			var current = substring(filename, currIndex, currIndex+1);
+			var lensIndex = indexOf(filename, "mm")-2;
+			var lens = substring(filename, lensIndex, lensIndex+2);
+			var expIndex = indexOf(filename, "sec")-1;
+			var exposure = substring(filename, expIndex, expIndex+1);
+			print(current, lens, exposure);
 
-			// need to add loop on the rest of this stuff for line making
+			// loop through lines
+			for (line=0; line<numLines; line++) {
+				open(pth); // open the image so it is active
+				// create entry in table
+				var entryLine = i*numLines + line;
+				Table.set("File Name", entryLine, filename);
+				Table.set("LED Current", entryLine, current);
+				Table.set("Lens Focal Length (mm)", entryLine, lens);
+				Table.set("Exposure Time (sec)", entryLine, exposure);
+				Table.set("Line", entryLine, lineNames[line]);
 
-			// find line and get statistics
-			vals = findLine(2487, 700, 2487, 2300);
-			Array.getStatistics(vals, min, max, mean, stdDev);
+				// find line and get statistics
+				vals = findLine(linePoints[line*4], linePoints[line*4+1], linePoints[line*4+2], linePoints[line*4+3]);
+				Array.getStatistics(vals, min, max, mean, stdDev);
 
-			// show line profile
-			Plot.create("Profile " + filename, "Row", "Intensity", vals);
-			Plot.show();
+				// show line profile
+				Plot.create("Profile " + filename, "Row", "Intensity", vals);
+				Plot.show();
 
-			// characterize background and noise
-			var length = vals.length;
-			background = Array.slice(vals, length-300, length); // probably want this to be different depending on which image we are looking at
-			Array.getStatistics(background, minBG, maxBG, meanBG, stdDevBG);
-			Table.set("Mean Background", i, meanBG);
-			Table.set("Background Standard Deviation", i, stdDevBG);
+				// characterize background and noise
+				var length = vals.length;
+				background = Array.slice(vals, length-300, length); // probably want this to be different depending on which image we are looking at
+				Array.getStatistics(background, minBG, maxBG, meanBG, stdDevBG);
+				Table.set("Mean Background", entryLine, meanBG);
+				Table.set("Background Standard Deviation", entryLine, stdDevBG);
 
-			// find peak sets
-			sets = findPeakSets(vals, stdDevBG, meanBG, expectedPeaks);
+				// find peak sets
+				sets = findPeakSets(vals, stdDevBG, meanBG, expectedPeaks);
 
-			// characterize sets
-			for (j=0; j<sets.length/expectedPeaks; j++) {
-				var start = j*expectedPeaks;
-				var end = start + expectedPeaks;
-				indices = Array.slice(sets, start, end);
-				setStats = getStatsFromIndices(vals, indices);
-				var setMin = setStats[0];
-				var setMax = setStats[1];
-				var setMean = setStats[2];
-				var setStdDev = setStats[3];
-				Table.set("Set " + j + " Mean", i, setMean);
-				//Table.set("Set " + j + " Min", i, setMin);
-				//Table.set("Set " + j + " Max", i, setMax);
+				// characterize sets
+				for (j=0; j<sets.length/expectedPeaks; j++) {
+					var start = j*expectedPeaks;
+					var end = start + expectedPeaks;
+					indices = Array.slice(sets, start, end);
+					setStats = getStatsFromIndices(vals, indices);
+					var setMin = setStats[0];
+					var setMax = setStats[1];
+					var setMean = setStats[2];
+					var setStdDev = setStats[3];
+					Table.set("Mean Signal " + peakNames[j], entryLine, setMean-meanBG);
+					//Table.set("Set " + j + " Min", i, setMin);
+					//Table.set("Set " + j + " Max", i, setMax);
+				}
+
+				// let user look before closing
+				Dialog.create("Continue?");
+				Dialog.show();
+				close(filename);
 			}
 
-			// let user look before closing
-			Dialog.create("Continue?");
-			Dialog.show();
-			close(filename);
 		}
 		Table.update;
 	} else {
