@@ -32,17 +32,17 @@ macro "GALT [a]" {
 		}
 
 		// find nearby line with brighest pixel
-		var lastMax = 0;
+		var lastMean = 0;
 		for (j=0; j<pixels; j++) {
 			makeLine(lineLeft+j*xshift, lineBottom+j*yshift, lineRight+j*xshift, lineTop+j*yshift);
 			vals = getProfile();
 			Array.getStatistics(vals, min, max, mean, stdDev);
-			if (max < lastMax) {
+			if (mean < lastMean) {
 				makeLine(lineLeft+(j-1)*xshift, lineBottom+(j-1)*yshift, lineRight+(j-1)*xshift, lineTop+(j-1)*yshift);
 				vals = getProfile();
 				break;
 			} else {
-				lastMax = max;
+				lastMean = mean;
 			}
 		}
 
@@ -168,7 +168,6 @@ macro "GALT [a]" {
 			var lens = substring(filename, lensIndex, lensIndex+2);
 			var expIndex = indexOf(filename, "sec")-1;
 			var exposure = substring(filename, expIndex, expIndex+1);
-			print(current, lens, exposure);
 
 			// loop through lines
 			for (line=0; line<numLines; line++) {
@@ -215,8 +214,9 @@ macro "GALT [a]" {
 				}
 
 				// let user look before closing
-				Dialog.create("Continue?");
-				Dialog.show();
+				//Dialog.create("Continue?");
+				//Dialog.show();
+				waitForUser;
 				close(filename);
 			}
 
