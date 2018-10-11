@@ -57,7 +57,7 @@ macro "GALT [a]" {
 		var threshold = meanBG+10*stdDevBG;
 		maxima = Array.findMaxima(vals, tol);
 		Array.sort(maxima);
-		Array.print(maxima);
+		//Array.print(maxima);
 
 		for (i=0; i<maxima.length-expectedPeaks+1; i++) {
 			set = Array.slice(maxima, i, i+expectedPeaks);
@@ -72,21 +72,21 @@ macro "GALT [a]" {
 						lastStdDev = thisStdDev;
 						set = testSet;
 					} else {
-						Array.print(set);
+						//Array.print(set);
 						for (k=0; k<set.length; k++) {
 							res = append(res, set[k]);
 						}
 						i = j+expectedPeaks-2;
 						tooClose = true;
 						while(tooClose) {
-							print(i);
-							print(maxima[i+1]);
-							print(set[set.length-1]);
+							//print(i);
+							//print(maxima[i+1]);
+							//print(set[set.length-1]);
 							tooClose = maxima[i+1] - set[set.length-1] < minPixBtwSets;
 							if (tooClose) {
 								i++;
 							}
-							print(i);
+							//print(i);
 						}
 						break;
 					}
@@ -119,7 +119,7 @@ macro "GALT [a]" {
 	}
 
 	// get directory from user
-	var dir = getString("This macro takes a file path which is the target directory. It loops through the files in this target directory to perform analysis. Please enter the target directory file path.", "C:/Gener8/GLT/GALT FL Images/10-09 16 mm lens/9x3 test");
+	var dir = getString("This macro takes a file path which is the target directory. It loops through the files in this target directory to perform analysis. Please enter the target directory file path.", "C:/Gener8/GLT/GALT FL Images/2x6");
 	if ( !endsWith(dir, "/") ) {
 		dir = dir + "/";
 	}
@@ -127,7 +127,7 @@ macro "GALT [a]" {
 	// user selects image type from available options, all images in target directory have to be same style
 	Dialog.create("Select Image Type");
 	items = newArray("9 sets of 3", "9 sets of 1", "2 columns of 6");
-	Dialog.addRadioButtonGroup("Options", items, 3, 1, items[0]);
+	Dialog.addRadioButtonGroup("Options", items, 3, 1, items[2]);
 	Dialog.show;
 	imageType = Dialog.getRadioButton();
 
