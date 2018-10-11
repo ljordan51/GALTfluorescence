@@ -49,7 +49,7 @@ macro "GALT [a]" {
 
 		//print(bestJ);
 		makeLine(lineLeft+bestJ*xshift, lineBottom+bestJ*yshift, lineRight+bestJ*xshift, lineTop+bestJ*yshift);
-		waitForUser;
+		//waitForUser;
 		vals = getProfile();
 
 		return vals;
@@ -246,8 +246,8 @@ macro "GALT [a]" {
 				}
 
 				// let user look before closing
-				Dialog.create("Continue?");
-				Dialog.show();
+				//Dialog.create("Continue?");
+				//Dialog.show();
 				//waitForUser;
 				close(filename);
 			}
