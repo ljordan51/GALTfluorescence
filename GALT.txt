@@ -183,7 +183,7 @@ macro "GALT [a]" {
 			lineNames = newArray("Assays", "Known Concentration");
 			linePoints = newArray(2054, 700, 2054, 2300, 2487, 700, 2487, 2300);
 			backgroundPoints = newArray(1300, 300);
-			peakNames = newArray("Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6");
+			peakNames = newArray("10u", "5u", "1u", "500n", "100n", "50n");
 			var expectedPeaks = 5;
 			var minPixBtwSets = 40;
 			var searchPixels = 20;
