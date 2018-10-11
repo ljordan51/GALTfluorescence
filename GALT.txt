@@ -110,13 +110,44 @@ macro "GALT [a]" {
 		dir = dir + "/";
 	}
 
-	// get images type from user
-	// switch case here to set params
-	// lines to draw (names of these lines)
-	// which direction they should go
-	// expected profile information
-	// expected peaks
-	var expectedPeaks = 5;
+	// user selects image type from available options, all images in target directory have to be same style
+	Dialog.create("Select Image Type");
+	items = newArray("9 sets of 3", "9 sets of 1", "2 columns of 6");
+	Dialog.addRadioButtonGroup("Options", items, 3, 1, items[2]);
+	Dialog.show;
+	imageType = Dialog.getRadioButton();
+	print(imageType);
+
+	// set params based on user image type choice
+	if ( imageType == "2 columns of 6") {
+			var numLines = 2; // integer value equal to the number of lines that will be drawn for profiles
+			lineNames = newArray("Assays", "Known Concentration"); // array of names for these lines for table creation
+			linePoints = newArray(2054, 700, 2054, 2300, 2487, 700, 2487, 2300); // array of sets of 4 points for drawing the lines
+			backgroundPoints = newArray(1300, 300); // array with sets of start points and lengths of areas to measure background information
+			peakNames = newArray("Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6"); // array with the names of each set in the line
+			var expectedPeaks = 5; // expected number of wells in a row with fluorescence
+	} else if ( imageType == case "9 sets of 3" ) {
+			var numLines = 3;
+			lineNames = newArray("Left", "Center", "Right");
+			linePoints = newArray();
+			backgroundPoints = newArray();
+			peakNames = newArray("Bottom 1u"; "Bottom 5u", "Bottom 10u", "Middle 1u"; "Middle 5u", "Middle 10u", "Top 1u"; "Top 5u", "Top 10u");
+			var expectedPeaks = 5;
+	} else if ( imageType == case "9 sets of 1" ) {
+			var numLines = 3;
+			lineNames = newArray("Left", "Center", "Right");
+			linePoints = newArray();
+			backgroundPoints = newArray();
+			peakNames = newArray("Bottom 1u"; "Bottom 5u", "Bottom 10u", "Middle 1u"; "Middle 5u", "Middle 10u", "Top 1u"; "Top 5u", "Top 10u");
+			var expectedPeaks = 3;
+	} else {
+			var numLines = 2;
+			lineNames = newArray("Assays", "Known Concentration");
+			linePoints = newArray(2054, 700, 2054, 2300, 2487, 700, 2487, 2300);
+			backgroundPoints = newArray(1300, 300);
+			peakNames = newArray("Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6");
+			var expectedPeaks = 5;
+	}
 
 	// create table to store data
 	Table.create("Fluorescence");
