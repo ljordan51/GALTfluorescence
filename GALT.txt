@@ -92,6 +92,9 @@ macro "GALT [a]" {
 							if (tooClose) {
 								i++;
 							}
+							if (i >= maxima.length-expectedPeaks+1) {
+								break;
+							}
 							//print(i);
 						}
 						break;
@@ -150,18 +153,18 @@ macro "GALT [a]" {
 			var numLines = 3;
 			lineNames = newArray("Left", "Center", "Right");
 			linePoints = newArray(508, 500, 508, 2700, 2123, 500, 2123, 2700, 3820, 500, 3820, 2700);
-			backgroundPoints = newArray(1350, 200);
+			backgroundPoints = newArray(1400, 150);
 			peakNames = newArray("Bottom 1u", "Bottom 5u", "Bottom 10u", "Middle 1u", "Middle 5u", "Middle 10u", "Top 1u", "Top 5u", "Top 10u");
 			var expectedPeaks = 5;
 			var minPixBtwSets = 30;
 	} else if ( imageType == "9 sets of 1" ) {
 			var numLines = 3;
 			lineNames = newArray("Left", "Center", "Right");
-			linePoints = newArray();
-			backgroundPoints = newArray();
+			linePoints = newArray(610, 500, 610, 2700, 2285, 500, 2285, 2700, 3644, 500, 3644, 2700);
+			backgroundPoints = newArray(400, 400);
 			peakNames = newArray("Bottom 1u", "Bottom 5u", "Bottom 10u", "Middle 1u", "Middle 5u", "Middle 10u", "Top 1u", "Top 5u", "Top 10u");
 			var expectedPeaks = 3;
-			var minPixBtwSets = 40;
+			var minPixBtwSets = 500;
 	} else {
 			var numLines = 2;
 			lineNames = newArray("Assays", "Known Concentration");
@@ -209,8 +212,8 @@ macro "GALT [a]" {
 				Array.getStatistics(vals, min, max, mean, stdDev);
 
 				// show line profile
-				// Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
-				// Plot.show();
+				//Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
+				//Plot.show();
 
 				// characterize background and noise
 				var length = vals.length;
