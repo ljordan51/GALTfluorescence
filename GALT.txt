@@ -232,7 +232,12 @@ macro "GALT [a]" {
 					var setMax = setStats[1];
 					var setMean = setStats[2];
 					var setStdDev = setStats[3];
-					Table.set("Mean Signal " + peakNames[j], entryLine, setMean-meanBG);
+					if (j > peakNames.length-1) {
+						peakName = "Set " + j;
+					} else {
+						peakName = peakNames[j];
+					}
+					Table.set("Mean Signal " + peakName, entryLine, setMean-meanBG);
 					//Table.set("Set " + j + " Min", i, setMin);
 					//Table.set("Set " + j + " Max", i, setMax);
 				}
