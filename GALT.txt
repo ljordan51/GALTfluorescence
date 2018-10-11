@@ -121,9 +121,6 @@ macro "GALT [a]" {
 	// create table to store data
 	Table.create("Fluorescence");
 
-	// create dialog to pause when needed
-	Dialog.create("Continue?");
-
 	// check if the entered path is a directory before entering main loop
 	if (File.isDirectory(dir)) {
 
@@ -157,17 +154,24 @@ macro "GALT [a]" {
 
 			// find peak sets
 			sets = findPeakSets(vals, stdDevBG, meanBG, expectedPeaks);
-			Array.print(sets);
 
 			// characterize sets
-			for (j=0; j<sets.length; j+=expectedPeaks) {
-				indices = Array.slice(sets, j, j+expectedPeaks);
-				Array.print(indices);
+			for (j=0; j<sets.length/expectedPeaks; j++) {
+				var start = j*expectedPeaks;
+				var end = start + expectedPeaks;
+				indices = Array.slice(sets, start, end);
 				setStats = getStatsFromIndices(vals, indices);
-				Array.print(setStats);
+				var setMin = setStats[0];
+				var setMax = setStats[1];
+				var setMean = setStats[2];
+				var setStdDev = setStats[3];
+				Table.set("Set " + j + " Mean", i, setMean);
+				//Table.set("Set " + j + " Min", i, setMin);
+				//Table.set("Set " + j + " Max", i, setMax);
 			}
 
 			// let user look before closing
+			Dialog.create("Continue?");
 			Dialog.show();
 			close(filename);
 		}
