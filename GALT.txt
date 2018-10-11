@@ -51,15 +51,17 @@ macro "GALT [a]" {
 
 	// find sets of peaks function
 	// needs array of values from profile, stdDev background, mean background value, expected number of peaks per set, expected number of sets?
-	function findPeakSets(vals, stDevBG, meanBG, expectedPeaks) {
+	function findPeakSets(vals, stDevBG, meanBG, expectedPeaks, minPixBtwSets) {
 		res = newArray;
 		var tol = 3*stdDevBG;
+		var threshold = meanBG+10*stdDevBG;
 		maxima = Array.findMaxima(vals, tol);
 		Array.sort(maxima);
+		Array.print(maxima);
 
 		for (i=0; i<maxima.length-expectedPeaks+1; i++) {
 			set = Array.slice(maxima, i, i+expectedPeaks);
-			if ( amplitudeCheck(vals, set, 3*meanBG) ) {
+			if ( amplitudeCheck(vals, set, threshold) ) {
 				lastStats = getStatsFromIndices(vals, set);
 				lastStdDev = lastStats[3];
 				for (j=i+1; j<maxima.length-expectedPeaks+1; j++) {
@@ -70,10 +72,22 @@ macro "GALT [a]" {
 						lastStdDev = thisStdDev;
 						set = testSet;
 					} else {
+						Array.print(set);
 						for (k=0; k<set.length; k++) {
 							res = append(res, set[k]);
 						}
 						i = j+expectedPeaks-2;
+						tooClose = true;
+						while(tooClose) {
+							print(i);
+							print(maxima[i+1]);
+							print(set[set.length-1]);
+							tooClose = maxima[i+1] - set[set.length-1] < minPixBtwSets;
+							if (tooClose) {
+								i++;
+							}
+							print(i);
+						}
 						break;
 					}
 				}
@@ -105,7 +119,7 @@ macro "GALT [a]" {
 	}
 
 	// get directory from user
-	var dir = getString("This macro takes a file path which is the target directory. It loops through the files in this target directory to perform analysis. Please enter the target directory file path.", "C:/Gener8/GLT/GALT FL Images/16mm lens/vertical rows center");
+	var dir = getString("This macro takes a file path which is the target directory. It loops through the files in this target directory to perform analysis. Please enter the target directory file path.", "C:/Gener8/GLT/GALT FL Images/10-09 16 mm lens/9x3 test");
 	if ( !endsWith(dir, "/") ) {
 		dir = dir + "/";
 	}
@@ -113,7 +127,7 @@ macro "GALT [a]" {
 	// user selects image type from available options, all images in target directory have to be same style
 	Dialog.create("Select Image Type");
 	items = newArray("9 sets of 3", "9 sets of 1", "2 columns of 6");
-	Dialog.addRadioButtonGroup("Options", items, 3, 1, items[2]);
+	Dialog.addRadioButtonGroup("Options", items, 3, 1, items[0]);
 	Dialog.show;
 	imageType = Dialog.getRadioButton();
 
@@ -125,6 +139,7 @@ macro "GALT [a]" {
 			backgroundPoints = newArray(1300, 300); // array with sets of start points and lengths of areas to measure background information
 			peakNames = newArray("Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6"); // array with the names of each set in the line
 			var expectedPeaks = 5; // expected number of wells in a row with fluorescence
+			var minPixBtwSets = 40; // minimum number of pixels expected to be seen between any two sets
 	} else if ( imageType == "9 sets of 3" ) {
 			var numLines = 3;
 			lineNames = newArray("Left", "Center", "Right");
@@ -132,6 +147,7 @@ macro "GALT [a]" {
 			backgroundPoints = newArray(1350, 200);
 			peakNames = newArray("Bottom 1u", "Bottom 5u", "Bottom 10u", "Middle 1u", "Middle 5u", "Middle 10u", "Top 1u", "Top 5u", "Top 10u");
 			var expectedPeaks = 5;
+			var minPixBtwSets = 30;
 	} else if ( imageType == "9 sets of 1" ) {
 			var numLines = 3;
 			lineNames = newArray("Left", "Center", "Right");
@@ -139,6 +155,7 @@ macro "GALT [a]" {
 			backgroundPoints = newArray();
 			peakNames = newArray("Bottom 1u", "Bottom 5u", "Bottom 10u", "Middle 1u", "Middle 5u", "Middle 10u", "Top 1u", "Top 5u", "Top 10u");
 			var expectedPeaks = 3;
+			var minPixBtwSets = 40;
 	} else {
 			var numLines = 2;
 			lineNames = newArray("Assays", "Known Concentration");
@@ -146,6 +163,7 @@ macro "GALT [a]" {
 			backgroundPoints = newArray(1300, 300);
 			peakNames = newArray("Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6");
 			var expectedPeaks = 5;
+			var minPixBtwSets = 40;
 	}
 
 	// create table to store data
@@ -185,7 +203,7 @@ macro "GALT [a]" {
 				Array.getStatistics(vals, min, max, mean, stdDev);
 
 				// show line profile
-				Plot.create("Profile " + filename, "Row", "Intensity", vals);
+				Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
 				Plot.show();
 
 				// characterize background and noise
@@ -196,7 +214,7 @@ macro "GALT [a]" {
 				Table.set("Background Standard Deviation", entryLine, stdDevBG);
 
 				// find peak sets
-				sets = findPeakSets(vals, stdDevBG, meanBG, expectedPeaks);
+				sets = findPeakSets(vals, stdDevBG, meanBG, expectedPeaks, minPixBtwSets);
 
 				// characterize sets
 				for (j=0; j<sets.length/expectedPeaks; j++) {
