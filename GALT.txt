@@ -12,7 +12,7 @@ macro "GALT [a]" {
 
 	// find line function
 	// needs start params and direction
-	function findLine(x0, y0, x1, y1) {
+	function findLine(x0, y0, x1, y1, searchPixels) {
 
 		// starting guess parameters for line finding
 		var lineTop = y0;
@@ -20,7 +20,7 @@ macro "GALT [a]" {
 		var lineLeft = x0;
 		var lineRight = x1;
 
-		var pixels = 300; // number of pixels between centers is about 14
+		var pixels = searchPixels; // number of pixels between centers is about 14
 
 		// direction of movement should be perpendicular to line
 		if ( y0 == y1 ) {
@@ -57,17 +57,18 @@ macro "GALT [a]" {
 
 	// find sets of peaks function
 	// needs array of values from profile, stdDev background, mean background value, expected number of peaks per set, expected number of sets?
-	function findPeakSets(vals, stDevBG, meanBG, expectedPeaks, minPixBtwSets) {
+	function findPeakSets(vals, stDevBG, meanBG, expectedPeaks, minPixBtwSets, maxIndexRange) {
 		res = newArray;
 		var tol = 3*stdDevBG;
-		var threshold = meanBG+10*stdDevBG;
+		var threshold = meanBG+5*stdDevBG;
+		//print(threshold);
 		maxima = Array.findMaxima(vals, tol);
 		Array.sort(maxima);
 		//Array.print(maxima);
 
 		for (i=0; i<maxima.length-expectedPeaks+1; i++) {
 			set = Array.slice(maxima, i, i+expectedPeaks);
-			if ( amplitudeCheck(vals, set, threshold) ) {
+			if ( amplitudeCheck(vals, set, threshold) && indexRangeCheck(set, maxIndexRange) ) {
 				lastStats = getStatsFromIndices(vals, set);
 				lastStdDev = lastStats[3];
 				for (j=i+1; j<maxima.length-expectedPeaks+1; j++) {
@@ -97,12 +98,18 @@ macro "GALT [a]" {
 							}
 							//print(i);
 						}
+						//print(i);
 						break;
 					}
 				}
 			}
 		}
 		return res;
+	}
+
+	function indexRangeCheck(indices, maxRange) {
+		Array.getStatistics(indices, min, max, mean, stdDev);
+		return (maxRange > (max-min));
 	}
 
 	// amplitude check helper function for find peak sets function
@@ -149,6 +156,8 @@ macro "GALT [a]" {
 			peakNames = newArray("Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6"); // array with the names of each set in the line
 			var expectedPeaks = 5; // expected number of wells in a row with fluorescence
 			var minPixBtwSets = 40; // minimum number of pixels expected to be seen between any two sets
+			var searchPixels = 20; // number of pixels to search through for line finding
+			var maxIndexRange = 120; // number of pixels that the set of peaks should range at maximum
 	} else if ( imageType == "9 sets of 3" ) {
 			var numLines = 3;
 			lineNames = newArray("Left", "Center", "Right");
@@ -157,6 +166,8 @@ macro "GALT [a]" {
 			peakNames = newArray("Bottom 1u", "Bottom 5u", "Bottom 10u", "Middle 1u", "Middle 5u", "Middle 10u", "Top 1u", "Top 5u", "Top 10u");
 			var expectedPeaks = 5;
 			var minPixBtwSets = 30;
+			var searchPixels = 300;
+			var maxIndexRange = 120;
 	} else if ( imageType == "9 sets of 1" ) {
 			var numLines = 3;
 			lineNames = newArray("Left", "Center", "Right");
@@ -165,6 +176,8 @@ macro "GALT [a]" {
 			peakNames = newArray("Bottom 1u", "Bottom 5u", "Bottom 10u", "Middle 1u", "Middle 5u", "Middle 10u", "Top 1u", "Top 5u", "Top 10u");
 			var expectedPeaks = 3;
 			var minPixBtwSets = 500;
+			var searchPixels = 300;
+			var maxIndexRange = 100;
 	} else {
 			var numLines = 2;
 			lineNames = newArray("Assays", "Known Concentration");
@@ -173,10 +186,12 @@ macro "GALT [a]" {
 			peakNames = newArray("Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6");
 			var expectedPeaks = 5;
 			var minPixBtwSets = 40;
+			var searchPixels = 20;
+			var maxIndexRange = 120;
 	}
 
 	// create table to store data
-	Table.create("Fluorescence");
+	//Table.create("Fluorescence");
 
 	// check if the entered path is a directory before entering main loop
 	if (File.isDirectory(dir)) {
@@ -208,7 +223,7 @@ macro "GALT [a]" {
 				Table.set("Line", entryLine, lineNames[line]);
 
 				// find line and get statistics
-				vals = findLine(linePoints[line*4], linePoints[line*4+1], linePoints[line*4+2], linePoints[line*4+3]);
+				vals = findLine(linePoints[line*4], linePoints[line*4+1], linePoints[line*4+2], linePoints[line*4+3], searchPixels);
 				Array.getStatistics(vals, min, max, mean, stdDev);
 
 				// show line profile
@@ -223,13 +238,15 @@ macro "GALT [a]" {
 				Table.set("Background Standard Deviation", entryLine, stdDevBG);
 
 				// find peak sets
-				sets = findPeakSets(vals, stdDevBG, meanBG, expectedPeaks, minPixBtwSets);
+				sets = findPeakSets(vals, stdDevBG, meanBG, expectedPeaks, minPixBtwSets, maxIndexRange);
+				Table.set("Sets Found", entryLine, sets.length/expectedPeaks);
 
 				// characterize sets
 				for (j=0; j<sets.length/expectedPeaks; j++) {
 					var start = j*expectedPeaks;
 					var end = start + expectedPeaks;
 					indices = Array.slice(sets, start, end);
+					Array.getStatistics(indices, indexMin, indexMax, indexMean, indexStdDev);
 					setStats = getStatsFromIndices(vals, indices);
 					var setMin = setStats[0];
 					var setMax = setStats[1];
@@ -240,6 +257,8 @@ macro "GALT [a]" {
 					} else {
 						peakName = peakNames[j];
 					}
+					//Table.set("Max Index " + peakName, entryLine, indexMax);
+					//Table.set("Min Index " + peakName, entryLine, indexMin);
 					Table.set("Mean Signal " + peakName, entryLine, setMean-meanBG);
 					//Table.set("Set " + j + " Min", i, setMin);
 					//Table.set("Set " + j + " Max", i, setMax);
