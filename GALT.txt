@@ -75,6 +75,8 @@ macro "GALT [a]" {
 			//print(threshold-j*stdDevBG);
 			set = findSet(vals, maxima, firstSetStart, firstSetEnd, expectedPeaks, threshold-j*stdDevBG, maxIndexRange);
 			if (set.length > 0) {
+				//print("found first set");
+				//Array.print(set);
 				break;
 			}
 		}
@@ -82,7 +84,6 @@ macro "GALT [a]" {
 		for (k=0; k<set.length; k++) {
 			res = append(res, set[k]);
 		}
-		//print("found first set");
 		//Array.print(res);
 
 		if (res.length > 0) {
@@ -216,7 +217,7 @@ macro "GALT [a]" {
 			var firstSetEnd = 470; // last index expected to see a well in the first set
 			var searchPixels = 20; // number of pixels to search through for line finding
 			var maxIndexRange = 84; // number of pixels that the set of peaks should range at maximum
-			var startThresholdMultiplier = 20; // number of standard devaitions away from mean to start looking for first set maxima
+			var startThresholdMultiplier = 11; // number of standard devaitions away from mean to start looking for first set maxima
 	} else if ( imageType == "9 sets of 3" ) {
 			lineNames = newArray("Left Top", "Left Middle", "Left Bottom", "Center Top", "Center Middle", "Center Bottom", "Right Top", "Right Middle", "Right Bottom");
 			linePoints = newArray(508, 531, 508, 1254,
@@ -259,20 +260,6 @@ macro "GALT [a]" {
 			var searchPixels = 300;
 			var maxIndexRange = 56;
 			var startThresholdMultiplier = 20;
-	} else {
-		lineNames = newArray("Assays", "Known Concentration");
-		linePoints = newArray(1980, 700, 1980, 2300,
-													2400, 700, 2400, 2300);
-		backgroundPoints = newArray(1300, 300);
-		peakNames = newArray("10u", "5u", "1u", "500n", "100n", "50n");
-		var expectedSets = 6;
-		var expectedPeaks = 5;
-		var pixBtwSets = newArray(140, 140, 140, 140, 140);
-		var firstSetStart = 200;
-		var firstSetEnd = 470;
-		var searchPixels = 20;
-		var maxIndexRange = 84;
-		var startThresholdMultiplier = 20;
 	}
 
 	// create table to store data
@@ -318,7 +305,6 @@ macro "GALT [a]" {
 				// show line profile
 				Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
 				Plot.show();
-				//waitForUser;
 				close(filename);
 
 				// characterize background and noise
