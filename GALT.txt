@@ -302,8 +302,9 @@ macro "GALT [a]" {
 				Array.getStatistics(vals, min, max, mean, stdDev);
 
 				// show line profile
-				//Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
-				//Plot.show();
+				Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
+				Plot.show();
+				waitForUser;
 				close(filename);
 
 				// characterize background and noise
@@ -362,4 +363,5 @@ macro "GALT [a]" {
 	} else {
 		waitForUser("Error: Not a valid directory entry.", "It appears the file path you've entered is not recognized as a directory. Please check your file path and run this macro again.");
 	}
+	close("Prof*");
 }
