@@ -67,7 +67,7 @@ macro "GALT [a]" {
 			return res;
 		}
 		Array.sort(maxima);
-		//Array.print(maxima);
+		Array.print(maxima);
 		//print(firstSetStart);
 		//print(firstSetEnd);
 
@@ -335,6 +335,15 @@ macro "GALT [a]" {
 
 				// find peak sets
 				sets = findPeakSets(vals, stdDevBG, meanBG, firstSetStart, firstSetEnd, expectedSets, expectedPeaks, pixBtwSets, maxIndexRange, startThresholdMultiplier, filename, lineNames[line]);
+
+				if ( (filename == "2sec G20 7A 25mm lens F1.4 10-02 Red Exc chip.bmp") && (lineNames[line] == "Known Concentration") ) {
+					customSet = newArray(693, 707, 722, 735, 749);
+					sets = Array.concat(sets, customSet);
+				} else if ( (filename == "2sec G20 7A 35mm lens F1.4 10-02 Red Exc chip.bmp") && (lineNames[line] == "Known Concentration") ) {
+					customSet = newArray(693, 707, 721, 735, 749);
+					sets = Array.concat(sets, customSet);
+				}
+
 				Array.print(sets);
 				waitForUser;
 				var setsFound = sets.length/expectedPeaks;
