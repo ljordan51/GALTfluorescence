@@ -49,62 +49,111 @@ macro "GALT [a]" {
 
 		//print(bestJ);
 		makeLine(lineLeft+bestJ*xshift, lineBottom+bestJ*yshift, lineRight+bestJ*xshift, lineTop+bestJ*yshift);
-		waitForUser;
 		vals = getProfile();
 
 		return vals;
 	}
 
 	// find sets of peaks function
-	// needs array of values from profile, stdDev background, mean background value, expected number of peaks per set, expected number of sets?
-	function findPeakSets(vals, stDevBG, meanBG, expectedSets, expectedPeaks, firstSetStart, pixBtwSets, maxIndexRange) {
+	function findPeakSets(vals, stDevBG, meanBG, firstSetStart, firstSetEnd, expectedSets, expectedPeaks, pixBtwSets, maxIndexRange) {
 		res = newArray;
 		var tol = 3*stdDevBG;
-		var threshold = meanBG+15*stdDevBG;
+		var minThresholdStdDevMultiplier = 3;
+		var startThresholdStdDevMultiplier = 20;
+		var threshold = meanBG+startThresholdStdDevMultiplier*stdDevBG;
 		//print(threshold);
 		maxima = Array.findMaxima(vals, tol);
+		if (maxima.length < expectedPeaks) {
+			return res;
+		}
 		Array.sort(maxima);
 		//Array.print(maxima);
 
-		for (i=0; i<maxima.length-expectedPeaks+1; i++) {
-			set = Array.slice(maxima, i, i+expectedPeaks);
-			if ( amplitudeCheck(vals, set, threshold) && indexRangeCheck(set, maxIndexRange) ) {
-				lastStats = getStatsFromIndices(vals, set);
-				lastStdDev = lastStats[3];
-				for (j=i+1; j<maxima.length-expectedPeaks+1; j++) {
-					testSet = Array.slice(maxima, j, j+expectedPeaks);
-					thisStats = getStatsFromIndices(vals, testSet);
-					thisStdDev = thisStats[3];
-					if (thisStdDev < lastStdDev) {
-						lastStdDev = thisStdDev;
-						set = testSet;
-					} else {
-						//Array.print(set);
-						for (k=0; k<set.length; k++) {
-							res = append(res, set[k]);
-						}
-						i = j+expectedPeaks-2;
-						tooClose = true;
-						while(tooClose) {
-							//print(i);
-							//print(maxima[i+1]);
-							//print(set[set.length-1]);
-							tooClose = maxima[i+1] - set[set.length-1] < minPixBtwSets;
-							if (tooClose) {
-								i++;
-							}
-							if (i >= maxima.length-expectedPeaks+1) {
-								break;
-							}
-							//print(i);
-						}
-						//print(i);
+		for (j=0; j<startThresholdStdDevMultiplier-minThresholdStdDevMultiplier+1; j++) {
+			print(threshold-j*stdDevBG);
+			print(stdDevBG);
+			print("end");
+			print(firstSetEnd);
+			print(expectedPeaks-1);
+			print(pixBtwWellCenters);
+			print(firstSetEnd-(expectedPeaks-1)*pixBtwWellCenters);
+			set = findSet(vals, maxima, firstSetStart, firstSetEnd-(expectedPeaks-1)*pixBtwWellCenters, expectedPeaks, threshold-j*stdDevBG, maxIndexRange);
+			if (set.length > 0) {
+				break;
+			}
+		}
+
+		for (k=0; k<set.length; k++) {
+			res = append(res, set[k]);
+		}
+		print("found first set");
+		Array.print(res);
+
+		if (res.length > 0) {
+			lastSetStartIndex = res[0];
+			for (i=1; i<expectedSets; i++) {
+				print(lastSetStartIndex);
+				nextSetStartIndex = lastSetStartIndex+pixBtwSets[i-1]-2*pixBtwWellCenters;
+				print(nextSetStartIndex);
+				for (j=0; j<startThresholdStdDevMultiplier-minThresholdStdDevMultiplier+1; j++) {
+					print(threshold-j*stdDevBG);
+					print(stdDevBG);
+					set = findSet(vals, maxima, nextSetStartIndex, nextSetStartIndex+maxIndexRange+3*pixBtwWellCenters, expectedPeaks, threshold-j*stdDevBG, maxIndexRange);
+					if (set.length > 0) {
+						Array.print(set);
 						break;
 					}
+				}
+				for (k=0; k<set.length; k++) {
+					res = append(res, set[k]);
+				}
+				if (set.length > 0) {
+					lastSetStartIndex = set[0];
+				} else {
+					lastSetStartIndex = nextSetStartIndex;
+				}
+
+			}
+		}
+
+		return res;
+	}
+
+	function findSet(vals, maxima, setStart, lastIndexToCheck, expectedPeaks, threshold, maxIndexRange) {
+		res = newArray;
+		for (i=0; i<maxima.length-expectedPeaks+1; i++) {
+			if ( (maxima[i] >= setStart) && (maxima[i]+(expectedPeaks-1)*pixBtwWellCenters <= lastIndexToCheck) ) { // skip unless index is greater than expected first possible start index
+				set = Array.slice(maxima, i, i+expectedPeaks);
+				if ( amplitudeCheck(vals, set, threshold) && indexRangeCheck(set, maxIndexRange) ) {
+					print("found good set");
+					Array.print(set);
+					res = findBestSet(vals, set, maxima, expectedPeaks, i, threshold, maxIndexRange);
+					break; // leave after finding first set
 				}
 			}
 		}
 		return res;
+	}
+
+	function findBestSet(vals, set, maxima, expectedPeaks, i, threshold, maxIndexRange) {
+		firstPeak = set[0];
+		lastStats = getStatsFromIndices(vals, set);
+		lastStdDev = lastStats[3];
+		for (j=i+1; j<maxima.length-expectedPeaks+1; j++) {
+			testSet = Array.slice(maxima, j, j+expectedPeaks);
+			if ( testSet[0] > firstPeak + 4*pixBtwWellCenters ) {
+				break;
+			}
+			thisStats = getStatsFromIndices(vals, testSet);
+			thisStdDev = thisStats[3];
+			if ( (thisStdDev < lastStdDev) && amplitudeCheck(vals, testSet, threshold) && indexRangeCheck(testSet, maxIndexRange) ) {
+				lastStdDev = thisStdDev;
+				set = testSet;
+			} else {
+				break;
+			}
+		}
+		return set;
 	}
 
 	function indexRangeCheck(indices, maxRange) {
@@ -158,6 +207,7 @@ macro "GALT [a]" {
 			var expectedPeaks = 5; // expected number of wells in a row with same fluorescence concentration
 			var pixBtwSets = newArray(140, 140, 140, 140, 140); // minimum number of pixels expected to be seen between any two sets
 			var firstSetStart = 200; // first index to expect a well in the first set could be in
+			var firstSetEnd = 470; // last index expected to see a well in the first set
 			var searchPixels = 20; // number of pixels to search through for line finding
 			var maxIndexRange = 84; // number of pixels that the set of peaks should range at maximum
 	} else if ( imageType == "9 sets of 3" ) {
@@ -177,6 +227,7 @@ macro "GALT [a]" {
 			var expectedPeaks = 5;
 			var pixBtwSets = newArray(112, 112);
 			var firstSetStart = 100;
+			var firstSetEnd = 310;
 			var searchPixels = 300;
 			var maxIndexRange = 84;
 	} else if ( imageType == "9 sets of 1" ) {
@@ -196,6 +247,7 @@ macro "GALT [a]" {
 			var expectedPeaks = 3;
 			var pixBtwSets = newArray(0);
 			var firstSetStart = 100;
+			var firstSetEnd = 375;
 			var searchPixels = 300;
 			var maxIndexRange = 56;
 	} else {
@@ -208,12 +260,16 @@ macro "GALT [a]" {
 		var expectedPeaks = 5;
 		var pixBtwSets = newArray(140, 140, 140, 140, 140);
 		var firstSetStart = 200;
+		var firstSetEnd = 470;
 		var searchPixels = 20;
 		var maxIndexRange = 84;
 	}
 
 	// create table to store data
 	//Table.create("Fluorescence");
+
+	// global pixels between well centers
+	var pixBtwWellCenters = 14;
 
 	// check if the entered path is a directory before entering main loop
 	if (File.isDirectory(dir)) {
@@ -252,7 +308,8 @@ macro "GALT [a]" {
 				// show line profile
 				Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
 				Plot.show();
-/*
+				close(filename);
+
 				// characterize background and noise
 				var length = vals.length;
 				background = Array.slice(vals, backgroundPoints[0], backgroundPoints[0]+backgroundPoints[1]); // probably want this to be different depending on which image we are looking at
@@ -261,9 +318,11 @@ macro "GALT [a]" {
 				Table.set("Background Standard Deviation", entryLine, stdDevBG);
 
 				// find peak sets
-				sets = findPeakSets(vals, stdDevBG, meanBG, expectedPeaks, minPixBtwSets, maxIndexRange);
-				Table.set("Sets Found", entryLine, sets.length/expectedPeaks);
-
+				sets = findPeakSets(vals, stdDevBG, meanBG, firstSetStart, firstSetEnd, expectedSets, expectedPeaks, pixBtwSets, maxIndexRange);
+				Array.print(sets);
+				waitForUser;
+				//Table.set("Sets Found", entryLine, sets.length/expectedPeaks);
+/*
 				// characterize sets
 				for (j=0; j<sets.length/expectedPeaks; j++) {
 					var start = j*expectedPeaks;
@@ -291,7 +350,7 @@ macro "GALT [a]" {
 				Dialog.create("Continue?");
 				Dialog.show();
 				//waitForUser;
-				close(filename);
+				//close(filename);
 			}
 
 		}
