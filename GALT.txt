@@ -179,6 +179,16 @@ macro "GALT [a]" {
 		return res;
 	}
 
+	function removeOutliers(arr, threshold) {
+		res = newArray;
+		for (i=0; i<arr.length; i++) {
+			if (arr[i] <= threshold) {
+				res = append(res, arr[i]);
+			}
+		}
+		return res;
+	}
+
 	// get directory from user
 	var dir = getString("This macro takes a file path which is the target directory. It loops through the files in this target directory to perform analysis. Please enter the target directory file path.", "C:/Gener8/GLT/GALT FL Images/2x6");
 	if ( !endsWith(dir, "/") ) {
@@ -304,19 +314,28 @@ macro "GALT [a]" {
 				// show line profile
 				Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
 				Plot.show();
-				waitForUser;
+				//waitForUser;
 				close(filename);
 
 				// characterize background and noise
-				var length = vals.length;
-				background = Array.slice(vals, backgroundPoints[0], backgroundPoints[0]+backgroundPoints[1]); // probably want this to be different depending on which image we are looking at
-				Array.getStatistics(background, minBG, maxBG, meanBG, stdDevBG);
-				Table.set("Mean Background", entryLine, meanBG);
-				Table.set("Background Standard Deviation", entryLine, stdDevBG);
+				numBackgroundRegions = backgroundPoints.length/2;
+				meanBGSum = 0;
+				stdDevBGSum = 0;
+				for (bgs=0; bgs<numBackgroundRegions; bgs++) {
+					background = Array.slice(vals, backgroundPoints[bgs*2], backgroundPoints[bgs*2]+backgroundPoints[bgs*2+1]); // probably want this to be different depending on which image we are looking at
+					Array.getStatistics(background, minBG, maxBG, meanBG, stdDevBG);
+					background = removeOutliers(background, 4*meanBG);
+					Array.getStatistics(background, minBG, maxBG, meanBG, stdDevBG);
+					meanBGSum += meanBG;
+					stdDevBGSum += stdDevBG;
+				}
+				Table.set("Mean Background", entryLine, meanBGSum/numBackgroundRegions);
+				Table.set("Background Standard Deviation", entryLine, stdDevBGSum/numBackgroundRegions);
 
 				// find peak sets
 				sets = findPeakSets(vals, stdDevBG, meanBG, firstSetStart, firstSetEnd, expectedSets, expectedPeaks, pixBtwSets, maxIndexRange);
-				//Array.print(sets);
+				Array.print(sets);
+				waitForUser;
 				var setsFound = sets.length/expectedPeaks;
 				Table.set("Sets Found", entryLine, setsFound);
 
