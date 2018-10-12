@@ -68,11 +68,12 @@ macro "GALT [a]" {
 		}
 		Array.sort(maxima);
 		//Array.print(maxima);
-		print(firstSetEnd-(expectedPeaks-1)*pixBtwWellCenters);
+		//print(firstSetStart);
+		//print(firstSetEnd);
 
 		for (j=0; j<startThresholdStdDevMultiplier-minThresholdStdDevMultiplier+1; j++) {
-			print(threshold-j*stdDevBG);
-			set = findSet(vals, maxima, firstSetStart, firstSetEnd-(expectedPeaks-1)*pixBtwWellCenters, expectedPeaks, threshold-j*stdDevBG, maxIndexRange);
+			//print(threshold-j*stdDevBG);
+			set = findSet(vals, maxima, firstSetStart, firstSetEnd, expectedPeaks, threshold-j*stdDevBG, maxIndexRange);
 			if (set.length > 0) {
 				break;
 			}
@@ -81,21 +82,21 @@ macro "GALT [a]" {
 		for (k=0; k<set.length; k++) {
 			res = append(res, set[k]);
 		}
-		print("found first set");
-		Array.print(res);
+		//print("found first set");
+		//Array.print(res);
 
 		if (res.length > 0) {
 			lastSetStartIndex = res[0];
 			for (i=1; i<expectedSets; i++) {
-				print(lastSetStartIndex);
+				//print(lastSetStartIndex);
 				nextSetStartIndex = lastSetStartIndex+pixBtwSets[i-1]-2*pixBtwWellCenters;
-				print(nextSetStartIndex);
+				//print(nextSetStartIndex);
 				for (j=0; j<startThresholdStdDevMultiplier-minThresholdStdDevMultiplier+1; j++) {
-					print(threshold-j*stdDevBG);
-					print(stdDevBG);
+					//print(threshold-j*stdDevBG);
+					//print(stdDevBG);
 					set = findSet(vals, maxima, nextSetStartIndex, nextSetStartIndex+maxIndexRange+3*pixBtwWellCenters, expectedPeaks, threshold-j*stdDevBG, maxIndexRange);
 					if (set.length > 0) {
-						Array.print(set);
+						//Array.print(set);
 						break;
 					}
 				}
@@ -117,11 +118,11 @@ macro "GALT [a]" {
 	function findSet(vals, maxima, setStart, lastIndexToCheck, expectedPeaks, threshold, maxIndexRange) {
 		res = newArray;
 		for (i=0; i<maxima.length-expectedPeaks+1; i++) {
-			if ( (maxima[i] >= setStart) && (maxima[i]+(expectedPeaks-1)*pixBtwWellCenters <= lastIndexToCheck) ) { // skip unless index is greater than expected first possible start index
+			if ( (maxima[i] >= setStart) && (maxima[i+expectedPeaks-1] <= lastIndexToCheck) ) { // skip unless index is greater than expected first possible start index
 				set = Array.slice(maxima, i, i+expectedPeaks);
 				if ( amplitudeCheck(vals, set, threshold) && indexRangeCheck(set, maxIndexRange) ) {
-					print("found good set");
-					Array.print(set);
+					//print("found good set");
+					//Array.print(set);
 					res = findBestSet(vals, set, maxima, expectedPeaks, i, threshold, maxIndexRange);
 					break; // leave after finding first set
 				}
@@ -216,7 +217,7 @@ macro "GALT [a]" {
 														3820, 531, 3820, 1254,
 														3820, 1254, 3820, 1977,
 														3820, 1977, 3820, 2700);
-			backgroundPoints = newArray(0, 150, 573, 150);
+			backgroundPoints = newArray(0, 75, 645, 75);
 			peakNames = newArray("1u", "5u", "10u");
 			var expectedSets = 3;
 			var expectedPeaks = 5;
@@ -314,12 +315,12 @@ macro "GALT [a]" {
 
 				// find peak sets
 				sets = findPeakSets(vals, stdDevBG, meanBG, firstSetStart, firstSetEnd, expectedSets, expectedPeaks, pixBtwSets, maxIndexRange);
-				Array.print(sets);
-				waitForUser;
-				//Table.set("Sets Found", entryLine, sets.length/expectedPeaks);
-/*
+				//Array.print(sets);
+				var setsFound = sets.length/expectedPeaks;
+				Table.set("Sets Found", entryLine, setsFound);
+
 				// characterize sets
-				for (j=0; j<sets.length/expectedPeaks; j++) {
+				for (j=0; j<setsFound; j++) {
 					var start = j*expectedPeaks;
 					var end = start + expectedPeaks;
 					indices = Array.slice(sets, start, end);
@@ -334,16 +335,24 @@ macro "GALT [a]" {
 					} else {
 						peakName = peakNames[j];
 					}
-					Table.set("Max Index " + peakName, entryLine, indexMax);
-					Table.set("Min Index " + peakName, entryLine, indexMin);
-					Table.set("Mean Signal " + peakName, entryLine, setMean-meanBG);
+					//Table.set("Max Index " + peakName, entryLine, indexMax);
+					//Table.set("Min Index " + peakName, entryLine, indexMin);
+					var signal = setMean-meanBG;
+					Table.set("Mean Signal " + peakName, entryLine, signal);
+					Table.set("Signal to Noise Ratio " + peakName, entryLine, signal/(3*stdDevBG));
+					if (j > 0) {
+						Table.set("Start to Start Distance From Last Set " + peakName, entryLine, indices[0]-lastStartIndex);
+						lastStartIndex = indices[0];
+					} else {
+						lastStartIndex = indices[0];
+					}
 					//Table.set("Set " + j + " Min", i, setMin);
 					//Table.set("Set " + j + " Max", i, setMax);
 				}
-*/
+
 				// let user look before closing
-				Dialog.create("Continue?");
-				Dialog.show();
+				//Dialog.create("Continue?");
+				//Dialog.show();
 				//waitForUser;
 				//close(filename);
 			}
