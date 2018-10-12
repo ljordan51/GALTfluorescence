@@ -67,7 +67,7 @@ macro "GALT [a]" {
 			return res;
 		}
 		Array.sort(maxima);
-		Array.print(maxima);
+		//Array.print(maxima);
 		//print(firstSetStart);
 		//print(firstSetEnd);
 
@@ -344,8 +344,8 @@ macro "GALT [a]" {
 					sets = Array.concat(sets, customSet);
 				}
 
-				Array.print(sets);
-				waitForUser;
+				//Array.print(sets);
+				//waitForUser;
 				var setsFound = sets.length/expectedPeaks;
 				Table.set("Sets Found", entryLine, setsFound);
 
