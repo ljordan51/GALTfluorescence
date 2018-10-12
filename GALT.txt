@@ -68,15 +68,10 @@ macro "GALT [a]" {
 		}
 		Array.sort(maxima);
 		//Array.print(maxima);
+		print(firstSetEnd-(expectedPeaks-1)*pixBtwWellCenters);
 
 		for (j=0; j<startThresholdStdDevMultiplier-minThresholdStdDevMultiplier+1; j++) {
 			print(threshold-j*stdDevBG);
-			print(stdDevBG);
-			print("end");
-			print(firstSetEnd);
-			print(expectedPeaks-1);
-			print(pixBtwWellCenters);
-			print(firstSetEnd-(expectedPeaks-1)*pixBtwWellCenters);
 			set = findSet(vals, maxima, firstSetStart, firstSetEnd-(expectedPeaks-1)*pixBtwWellCenters, expectedPeaks, threshold-j*stdDevBG, maxIndexRange);
 			if (set.length > 0) {
 				break;
