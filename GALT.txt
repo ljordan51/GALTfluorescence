@@ -273,6 +273,13 @@ macro "GALT [a]" {
 
 	// global pixels between well centers
 	var pixBtwWellCenters = 14;
+	// global concentrations dictionary
+	List.set("10u", 10000);
+	List.set("5u", 5000);
+	List.set("1u", 1000);
+	List.set("500n", 500);
+	List.set("100n", 100);
+	List.set("50n", 50);
 
 	// check if the entered path is a directory before entering main loop
 	if (File.isDirectory(dir)) {
@@ -365,11 +372,15 @@ macro "GALT [a]" {
 					} else {
 						peakName = peakNames[j];
 					}
+					concentration = parseInt(List.get(peakName));
 					//Table.set("Max Index " + peakName, entryLine, indexMax);
 					//Table.set("Min Index " + peakName, entryLine, indexMin);
 					var signal = setMean-meanBG;
+					var noise = 3*stdDevBG;
+					var sigToNoise = signal/noise;
 					Table.set("Mean Signal " + peakName, entryLine, signal);
-					Table.set("Signal to Noise Ratio " + peakName, entryLine, signal/(3*stdDevBG));
+					Table.set("Signal to Noise Ratio " + peakName, entryLine, sigToNoise);
+					Table.set("Limit of Detection (nM) " + peakName, entryLine, concentration/sigToNoise);
 					if (j > 0) {
 						Table.set("Start to Start Distance From Last Set " + peakName, entryLine, indices[0]-lastStartIndex);
 						lastStartIndex = indices[0];
