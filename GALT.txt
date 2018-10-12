@@ -59,7 +59,7 @@ macro "GALT [a]" {
 		res = newArray;
 		var tol = 3*stdDevBG;
 		var minThresholdStdDevMultiplier = 3;
-		var startThresholdStdDevMultiplier = 20;
+		var startThresholdStdDevMultiplier = 10;
 		var threshold = meanBG+startThresholdStdDevMultiplier*stdDevBG;
 		//print(threshold);
 		maxima = Array.findMaxima(vals, tol);
