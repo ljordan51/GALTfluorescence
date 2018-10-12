@@ -314,8 +314,8 @@ macro "GALT [a]" {
 				Array.getStatistics(vals, min, max, mean, stdDev);
 
 				// show line profile
-				Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
-				Plot.show();
+				//Plot.create("Profile " + filename + lineNames[line], "Row", "Intensity", vals);
+				//Plot.show();
 				close(filename);
 
 				// characterize background and noise
