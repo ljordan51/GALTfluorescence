@@ -55,11 +55,11 @@ macro "GALT [a]" {
 	}
 
 	// find sets of peaks function
-	function findPeakSets(vals, stDevBG, meanBG, firstSetStart, firstSetEnd, expectedSets, expectedPeaks, pixBtwSets, maxIndexRange) {
+	function findPeakSets(vals, stDevBG, meanBG, firstSetStart, firstSetEnd, expectedSets, expectedPeaks, pixBtwSets, maxIndexRange, startThresholdMultiplier) {
 		res = newArray;
 		var tol = 3*stdDevBG;
 		var minThresholdStdDevMultiplier = 3;
-		var startThresholdStdDevMultiplier = 10;
+		var startThresholdStdDevMultiplier = startThresholdMultiplier;
 		var threshold = meanBG+startThresholdStdDevMultiplier*stdDevBG;
 		//print(threshold);
 		maxima = Array.findMaxima(vals, tol);
@@ -216,6 +216,7 @@ macro "GALT [a]" {
 			var firstSetEnd = 470; // last index expected to see a well in the first set
 			var searchPixels = 20; // number of pixels to search through for line finding
 			var maxIndexRange = 84; // number of pixels that the set of peaks should range at maximum
+			var startThresholdMultiplier = 20; // number of standard devaitions away from mean to start looking for first set maxima
 	} else if ( imageType == "9 sets of 3" ) {
 			lineNames = newArray("Left Top", "Left Middle", "Left Bottom", "Center Top", "Center Middle", "Center Bottom", "Right Top", "Right Middle", "Right Bottom");
 			linePoints = newArray(508, 531, 508, 1254,
@@ -236,6 +237,7 @@ macro "GALT [a]" {
 			var firstSetEnd = 310;
 			var searchPixels = 300;
 			var maxIndexRange = 84;
+			var startThresholdMultiplier = 10;
 	} else if ( imageType == "9 sets of 1" ) {
 			lineNames = newArray("Left Top", "Left Middle", "Left Bottom", "Center Top", "Center Middle", "Center Bottom", "Right Top", "Right Middle", "Right Bottom");
 			linePoints = newArray(610, 507, 610, 1035,
@@ -256,6 +258,7 @@ macro "GALT [a]" {
 			var firstSetEnd = 375;
 			var searchPixels = 300;
 			var maxIndexRange = 56;
+			var startThresholdMultiplier = 20;
 	} else {
 		lineNames = newArray("Assays", "Known Concentration");
 		linePoints = newArray(1980, 700, 1980, 2300,
@@ -269,6 +272,7 @@ macro "GALT [a]" {
 		var firstSetEnd = 470;
 		var searchPixels = 20;
 		var maxIndexRange = 84;
+		var startThresholdMultiplier = 20;
 	}
 
 	// create table to store data
@@ -333,7 +337,7 @@ macro "GALT [a]" {
 				Table.set("Background Standard Deviation", entryLine, stdDevBGSum/numBackgroundRegions);
 
 				// find peak sets
-				sets = findPeakSets(vals, stdDevBG, meanBG, firstSetStart, firstSetEnd, expectedSets, expectedPeaks, pixBtwSets, maxIndexRange);
+				sets = findPeakSets(vals, stdDevBG, meanBG, firstSetStart, firstSetEnd, expectedSets, expectedPeaks, pixBtwSets, maxIndexRange, startThresholdMultiplier);
 				Array.print(sets);
 				waitForUser;
 				var setsFound = sets.length/expectedPeaks;
