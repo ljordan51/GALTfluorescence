@@ -287,6 +287,11 @@ macro "GALT [a]" {
 			var exposure = substring(filename, expIndex, expIndex+1);
 			var numLines = linePoints.length/4;
 
+			//change order for flipped
+			if (indexOf(filename, "flipped") >= 0) {
+				Array.reverse(peakNames);
+			}
+
 			// loop through lines
 			for (line=0; line<numLines; line++) {
 				open(pth); // open the image so it is active
@@ -365,6 +370,11 @@ macro "GALT [a]" {
 				//Dialog.show();
 				//waitForUser;
 				//close(filename);
+			}
+
+			//change order for flipped
+			if (indexOf(filename, "flipped") >= 0) {
+				Array.reverse(peakNames);
 			}
 
 		}
